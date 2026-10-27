@@ -10,6 +10,13 @@ cmake --build build-ios --target SonicForever --parallel 4
 app="build-ios/SonicForever.app"
 test -x "$app/SonicForever"
 cp -R build-resources "$app/ForeverResources"
+# Generate the iPhone and iPad home-screen icons from the supplied artwork.
+# Explicit PNG icons also work with the Ninja bundle generator (no actool step).
+for icon in 'AppIcon60x60@2x:120' 'AppIcon60x60@3x:180' 'AppIcon76x76:76' 'AppIcon76x76@2x:152' 'AppIcon83.5x83.5@2x:167'; do
+  name="${icon%:*}"
+  size="${icon##*:}"
+  sips -z "$size" "$size" ios/Assets/AppIcon.png --out "$app/$name.png" >/dev/null
+done
 # Ad-hoc signature; installation requires TrollStore or another compatible signer.
 codesign --force --sign - "$app"
 mkdir -p dist/Payload

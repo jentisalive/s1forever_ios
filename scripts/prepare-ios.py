@@ -39,6 +39,9 @@ replace('RSDKv4/main.cpp', '    SDL_SetHint(SDL_HINT_WINRT_HANDLE_BACK_BUTTON', 
 # Values were checked against the shipped Forever engine and current enum headers.
 aliases = json.loads((root / 'scripts/forever-aliases.json').read_text())
 script = 'RSDKv4/Script.cpp'
+# Forever's longest function names exceed the upstream 31-character limit.
+# Match the compiler's 64-byte declaration buffer, including the terminator.
+replace('RSDKv4/Script.hpp', '    char name[0x20];', '    char name[0x40];', 1)
 replace(script, '#define COMMON_SCRIPT_VAR_COUNT (34)', f'#define COMMON_SCRIPT_VAR_COUNT ({34 + len(aliases)})', 1)
 replace(script, '#define COMMON_SCRIPT_VAR_COUNT (33)', f'#define COMMON_SCRIPT_VAR_COUNT ({33 + len(aliases)})', 1)
 end_aliases = '    ScriptVariableInfo(VAR_ALIAS, ACCESS_PUBLIC, "DEVICE_ANDROID", "5"),\n};'
