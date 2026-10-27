@@ -1,0 +1,63 @@
+name: Publish iOS preview release
+on:
+  push:
+    paths:
+      - '.github/workflows/release-ios.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      BUILD_RUN: '40543650486'
+      BUILD_COMMIT: 'ebff4285804c08b587b83c3f6b1a97fc6d34508e'
+      RELEASE_TAG: 'v1.5.0-ios-preview.1'
+    steps:
+      - name: Verify and download successful iOS build
+        shell: bash
+        run: |
+          set -euo pipefail
+          conclusion="$(gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN" --jq .conclusion)"
+          commit="$(gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN" --jq .head_sha)"
+          test "$conclusion" = success
+          test "$commit" = "$BUILD_COMMIT"
+          gh run download "$BUILD_RUN" --name SonicForever-iOS --dir release-assets
+          test -s release-assets/SonicForever-iOS.ipa
+          test -s release-assets/SonicForever-iOS.tipa
+          unzip -tq release-assets/SonicForever-iOS.ipa
+      - name: Publish preview with installable packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > notes.md <<'NOTES'
+          First native arm64 iOS preview of Sonic 1 Forever 1.5.0.
+
+          ## Installation
+          1. Download either SonicForever-iOS.ipa or SonicForever-iOS.tipa below.
+          2. Install it with TrollStore Lite or another compatible installer.
+          3. Launch Sonic Forever, tap Import Data.rsdk, and select the archive from your own Sonic 1 (2013) copy.
+
+          Requires iOS 15 or later. The two packages contain the same app; choose the extension supported by your installer.
+
+          ## Included
+          - Native data importer using the iOS document picker.
+          - Forever touch controls enabled on startup.
+          - Saves, settings and mods in Files → On My iPhone → Sonic Forever.
+          - Static SDL2, Ogg and Vorbis dependencies.
+
+          GitHub Actions successfully compiled, linked and packaged this build. On-device launch and gameplay still need testing. This is a preview release.
+
+          The original Sonic 1 Data.rsdk is not included. Original game: SEGA / Sonic Team. Forever: Team Forever and credited contributors. Engine: RSDKModding, Rubberduckycooly and RMGRich; original RSDK by Christian Whitehead.
+
+          Built from commit ebff4285804c08b587b83c3f6b1a97fc6d34508e in workflow run 40543650486.
+          NOTES
+          if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --target "$BUILD_COMMIT" --draft --prerelease --title "Sonic Forever 1.5.0 — iOS Preview 1" --notes-file notes.md
+          fi
+          gh release upload "$RELEASE_TAG" release-assets/SonicForever-iOS.ipa release-assets/SonicForever-iOS.tipa --clobber
+          gh release edit "$RELEASE_TAG" --draft=false --prerelease --notes-file notes.md
