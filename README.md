@@ -1,3 +1,42 @@
+# Sonic Forever for iOS
+
+Native arm64 iOS adaptation of Team Forever's Sonic 1 Forever 1.5.0, using the RSDKv4 decompilation. Requires iOS 15 or later. Intended for installation through TrollStore or a compatible signing tool.
+
+## Status
+
+Initial port. Check the latest GitHub Actions build for compilation status. A successful build is not a device playtest; menus, touch controls, audio and full level progression still need testing on an iPhone.
+
+## Install
+
+1. Open **Actions → Build iOS**, select a successful run and download **SonicForever-iOS**.
+2. Extract the artifact ZIP and install the `.ipa` (or `.tipa`) with your compatible installer.
+3. Launch **Sonic Forever** and tap **Import Data.rsdk**. Select the data archive from your own Sonic 1 (2013) copy. The app copies it into its Documents folder.
+4. Saves, settings and mods are accessible in **Files → On My iPhone → Sonic Forever**. To replace the data archive later, close the game and replace `Data.rsdk` there.
+
+The original Sonic 1 data archive is not included in the repository or build. Sonic 2 data and an unconverted Origins datapack are not substitutes. The importer checks the RSDKv4 format; game compatibility is checked when the engine loads it.
+
+## Build
+
+The workflow builds on a macOS GitHub Actions runner with Xcode. To build manually on a Mac:
+
+```sh
+bash scripts/build-ios.sh
+```
+
+Dependencies are fetched at pinned commits by `scripts/fetch-deps.sh`. `scripts/prepare-ios.py` applies checked iOS patches to that engine checkout and stages the bundled Forever mod. No signing certificate or Apple Developer account is needed to generate the ad-hoc signed artifact. Installation depends on your device's installer and signing environment.
+
+## Port implementation
+
+- SDL2 UIKit app lifecycle, OpenGL ES 1 rendering and arm64 build.
+- Native document picker for user-owned game data.
+- Writable Documents directory for saves, configuration and mods.
+- Bundled Forever mod enabled on first launch; touch mode selected on startup.
+- Static SDL2/Ogg/Vorbis libraries; no externally installed frameworks.
+
+## Credits and original project information
+
+iOS integration: jentisalive project. Original Forever code and resources belong to Team Forever and the credited contributors. Engine: Rubberduckycooly, RMGRich and RSDKModding contributors. Original RSDK: Christian Whitehead. Sonic: SEGA and Sonic Team.
+
 # Sonic the Hedgehog Forever
 A modification of the 2013 mobile port, based on the 2021 decompilation
 

@@ -9,3 +9,13 @@ log.txt
 Data.rsdk
 Data.rsdk.xmf
 /SonLVLObjDefs/dllcache
+
+# Generated iOS build files and user-owned game data
+.build-deps/
+build-ios/
+build-resources/
+dist/
+*.rsdk
+*.ipa
+*.tipa
+__pycache__/

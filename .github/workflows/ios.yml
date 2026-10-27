@@ -1,0 +1,27 @@
+name: Build iOS
+on:
+  push:
+    paths:
+      - 'ios/**'
+      - 'scripts/**'
+      - 'Mods/**'
+      - '.github/workflows/ios.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build arm64 iOS application
+        run: bash scripts/build-ios.sh
+      - name: Upload installable packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: SonicForever-iOS
+          path: |
+            dist/SonicForever-iOS.ipa
+            dist/SonicForever-iOS.tipa
+          if-no-files-found: error
