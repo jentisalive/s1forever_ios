@@ -14,9 +14,9 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
-      BUILD_RUN: '40567417801'
-      BUILD_COMMIT: '4e1011ccdc1a65be418451d0791ed1b4df041f2f'
-      RELEASE_TAG: 'v1.5.0-ios-preview.3'
+      BUILD_RUN: '40570860315'
+      BUILD_COMMIT: '9b03f3c5079b7728d88d0858ab99ae33f1bd1faf'
+      RELEASE_TAG: 'v1.5.0-ios-preview.4'
     steps:
       - name: Verify and download successful iOS build
         shell: bash
@@ -33,36 +33,51 @@ jobs:
           test -s release-assets/SonicForever-iOS.ipa
           test -s release-assets/SonicForever-iOS.tipa
           unzip -tq release-assets/SonicForever-iOS.ipa
+          cmp release-assets/SonicForever-iOS.ipa release-assets/SonicForever-iOS.tipa
+          unzip -q release-assets/SonicForever-iOS.ipa 'Payload/*/Info.plist' 'Payload/*/AppIcon*.png' -d bundle-check
+          python3 - <<'PYTHON'
+          import plistlib, struct
+          from pathlib import Path
+          app = Path('bundle-check/Payload/SonicForever.app')
+          info = plistlib.loads((app / 'Info.plist').read_bytes())
+          assert info['CFBundleVersion'] == '4'
+          for name, size in [('AppIcon60x60@2x',120), ('AppIcon60x60@3x',180), ('AppIcon76x76',76), ('AppIcon76x76@2x',152), ('AppIcon83.5x83.5@2x',167)]:
+              data = (app / (name + '.png')).read_bytes()
+              assert data[:8] == b'\x89PNG\r\n\x1a\n'
+              assert struct.unpack('>II', data[16:24]) == (size, size), name
+          assert info['CFBundleIcons']['CFBundlePrimaryIcon']['CFBundleIconFiles'] == ['AppIcon60x60']
+          assert 'AppIcon83.5x83.5' in info['CFBundleIcons~ipad']['CFBundlePrimaryIcon']['CFBundleIconFiles']
+          print('Verified build 4 and all iPhone/iPad icons')
+          PYTHON
       - name: Publish preview with installable packages
         shell: bash
         run: |
           set -euo pipefail
           cat > notes.md <<'NOTES'
-          iOS Preview 3 fixes the startup failures in the earlier previews.
-          
+          iOS Preview 4 fixes a reproducible memory overflow when compiling Forever's player scripts and adds the supplied home-screen icon.
+
           ## Fixes
-          - Stage all 328 Forever scripts under Data/Scripts so the engine can load them.
-          - Adapt legacy events, function declarations, input names and fade operations to the current script compiler.
-          - Restore the priority, collision and platform aliases expected by Forever.
-          - Register the missing frame-rate callbacks that caused a crash while opening the main menu.
-          - Use the standalone mobile RSDK revision and refresh the previously installed bundled mod on first launch.
-          - Keep the progress bar and improved data importer from Preview 2.
-          
+          - Increase the script function-name buffer from 32 to 64 bytes to fit Forever's long player-function names without overwriting adjacent memory or aborting the app.
+          - Add the supplied artwork as the home-screen icon, with dedicated iPhone and iPad sizes.
+          - Keep the importer, import progress and script compatibility fixes from the previous previews.
+
           ## Update and install
           Install the .ipa or .tipa as an update through your compatible installer. Existing Data.rsdk and save files remain in the app's Documents folder.
           For a new installation, choose your own Sonic 1 (2013) Data.rsdk when prompted.
-          
+
           Requires iOS 15 or later. The IPA and TIPA contain the same app.
-          
+
           ## Validation
-          The iOS compilation and packaging passed. A headless runtime test with Sonic 1 data passed title screen → main menu → save selection → Green Hill Zone Act 1 with simulated mobile input and no script errors. Rendering and controls still need verification on an actual iPhone.
-          
+          The iOS compilation and packaging passed. An optimized AddressSanitizer build reproduced the pre-fix overflow during player-script compilation. After the fix, title screen → main menu → save selection → Green Hill Zone Act 1 passed, followed by an 18,000-frame headless run with simulated movement, jumping and repeated level loads without sanitizer or script errors. Package checks verify the bundled icon sizes and build number.
+
+          Rendering and controls still require verification on an actual iPhone. This fixes a reproduced crash; the supplied text log does not contain an iOS crash backtrace, so confirmation on the affected device is still needed.
+
           The original Sonic 1 Data.rsdk is not included. Original game: SEGA / Sonic Team. Forever: Team Forever and credited contributors. Engine: RSDKModding, Rubberduckycooly and RMGRich; original RSDK by Christian Whitehead.
-          
-          Built from commit 4e1011ccdc1a65be418451d0791ed1b4df041f2f in workflow run 40567417801.
+
+          Built from commit 9b03f3c5079b7728d88d0858ab99ae33f1bd1faf in workflow run 40570860315.
           NOTES
           if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release create "$RELEASE_TAG" --target "$GITHUB_SHA" --draft --prerelease --title "Sonic Forever 1.5.0 — iOS Preview 3" --notes-file notes.md
+            gh release create "$RELEASE_TAG" --target "$GITHUB_SHA" --draft --prerelease --title "Sonic Forever 1.5.0 — iOS Preview 4" --notes-file notes.md
           fi
           gh release upload "$RELEASE_TAG" release-assets/SonicForever-iOS.ipa release-assets/SonicForever-iOS.tipa --clobber
           gh release edit "$RELEASE_TAG" --draft=false --prerelease --notes-file notes.md
