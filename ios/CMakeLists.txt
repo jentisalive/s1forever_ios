@@ -29,7 +29,7 @@ add_executable(SonicForever MACOSX_BUNDLE ${ENGINE_SOURCES}
   "${ENGINE}/dependencies/all/tinyxml2/tinyxml2.cpp"
   Startup.mm)
 target_include_directories(SonicForever PRIVATE "${ENGINE}/RSDKv4" "${ENGINE}/RSDKv4/NativeObjects" "${ENGINE}/dependencies/all/stb-image" "${ENGINE}/dependencies/all/tinyxml2")
-target_compile_definitions(SonicForever PRIVATE RETRO_USE_SDL2=1 RETRO_USE_MOD_LOADER=1 RETRO_USE_NETWORKING=0 RETRO_USING_OPENGL=1 RETRO_USE_ORIGINAL_CODE=0 RSDK_REVISION=3 RSDK_AUTOBUILD=1 DECOMP_VERSION="1.3.3-ios" RETRO_DEV_EXTRA="iOS")
+target_compile_definitions(SonicForever PRIVATE GLES_SILENCE_DEPRECATION=1 RETRO_USE_SDL2=1 RETRO_USE_MOD_LOADER=1 RETRO_USE_NETWORKING=0 RETRO_USING_OPENGL=1 RETRO_USE_ORIGINAL_CODE=0 RSDK_REVISION=3 RSDK_AUTOBUILD=1 DECOMP_VERSION="1.3.3-ios" RETRO_DEV_EXTRA="iOS")
 target_compile_options(SonicForever PRIVATE $<$<COMPILE_LANGUAGE:OBJCXX>:-fobjc-arc>)
 target_link_libraries(SonicForever PRIVATE SDL2::SDL2main SDL2::SDL2-static vorbis "-framework UIKit" "-framework Foundation" "-framework OpenGLES")
 set_target_properties(SonicForever PROPERTIES

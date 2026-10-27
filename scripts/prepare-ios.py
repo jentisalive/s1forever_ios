@@ -26,7 +26,7 @@ replace(d, '#if RETRO_PLATFORM != RETRO_ANDROID', '#if RETRO_PLATFORM != RETRO_A
 # Keep Android-only audio code untouched, share only graphics dimensions.
 replace(d, '#if RETRO_PLATFORM == RETRO_ANDROID\n    Engine.', '#if RETRO_PLATFORM == RETRO_ANDROID || RETRO_PLATFORM == RETRO_iOS\n    Engine.')
 # UIKit owns a non-zero framebuffer; retain it across high-resolution setup.
-replace(d, 'void SetScreenDimensions(int width, int height)\n{', 'void SetScreenDimensions(int width, int height)\n{\n#if RETRO_PLATFORM == RETRO_iOS && RETRO_USING_OPENGL\n    GLint iosFramebuffer = 0;\n    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &iosFramebuffer);\n#endif', 1)
+replace(d, 'void SetupViewport()\n{', 'void SetupViewport()\n{\n#if RETRO_PLATFORM == RETRO_iOS && RETRO_USING_OPENGL\n    GLint iosFramebuffer = 0;\n    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &iosFramebuffer);\n#endif', 1)
 replace(d, '        glBindFramebuffer(GL_FRAMEBUFFER, 0);', '#if RETRO_PLATFORM == RETRO_iOS\n        glBindFramebuffer(GL_FRAMEBUFFER, iosFramebuffer);\n#else\n        glBindFramebuffer(GL_FRAMEBUFFER, 0);\n#endif')
 # SDL's display mode uses logical points; the GLES viewport needs drawable pixels.
 replace(d, '        int w = mode.w;\n        int h = mode.h;', '        int w = mode.w;\n        int h = mode.h;\n#if RETRO_PLATFORM == RETRO_iOS\n        SDL_GL_GetDrawableSize(Engine.window, &w, &h);\n#endif', 1)
