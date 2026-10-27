@@ -24,6 +24,8 @@ add_library(vorbis STATIC ${VORBIS_SOURCES})
 target_include_directories(vorbis PUBLIC "${DEPS}/vorbis/include" PRIVATE "${DEPS}/vorbis/lib")
 target_link_libraries(vorbis PUBLIC ogg)
 file(GLOB ENGINE_SOURCES CONFIGURE_DEPENDS "${ENGINE}/RSDKv4/*.cpp" "${ENGINE}/RSDKv4/NativeObjects/*.cpp")
+# All.cpp includes each native object .cpp; compiling both duplicates every symbol.
+list(FILTER ENGINE_SOURCES EXCLUDE REGEX "/NativeObjects/All\\.cpp$")
 add_executable(SonicForever MACOSX_BUNDLE ${ENGINE_SOURCES}
   "${ENGINE}/RSDKv4/fcaseopen.c"
   "${ENGINE}/dependencies/all/tinyxml2/tinyxml2.cpp"
