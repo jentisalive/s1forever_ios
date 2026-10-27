@@ -26,6 +26,9 @@ jobs:
           commit="$(gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN" --jq .head_sha)"
           test "$conclusion" = success
           test "$commit" = "$BUILD_COMMIT"
+          # Tag the publishing workflow commit only when app sources match the tested build.
+          changed="$(gh api "repos/$GH_REPO/compare/$BUILD_COMMIT...$GITHUB_SHA" --jq '.files[].filename')"
+          test "$changed" = ".github/workflows/release-ios.yml"
           gh run download "$BUILD_RUN" --name SonicForever-iOS --dir release-assets
           test -s release-assets/SonicForever-iOS.ipa
           test -s release-assets/SonicForever-iOS.tipa
@@ -61,7 +64,7 @@ jobs:
           Built from commit 7bde582c56931deb87ec8c50bef11fb5e5e11a91 in workflow run 40546766777.
           NOTES
           if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release create "$RELEASE_TAG" --target "$BUILD_COMMIT" --draft --prerelease --title "Sonic Forever 1.5.0 — iOS Preview 2" --notes-file notes.md
+            gh release create "$RELEASE_TAG" --target "$GITHUB_SHA" --draft --prerelease --title "Sonic Forever 1.5.0 — iOS Preview 2" --notes-file notes.md
           fi
           gh release upload "$RELEASE_TAG" release-assets/SonicForever-iOS.ipa release-assets/SonicForever-iOS.tipa --clobber
           gh release edit "$RELEASE_TAG" --draft=false --prerelease --notes-file notes.md
