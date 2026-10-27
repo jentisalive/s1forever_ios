@@ -14,9 +14,9 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
-      BUILD_RUN: '40546766777'
-      BUILD_COMMIT: '7bde582c56931deb87ec8c50bef11fb5e5e11a91'
-      RELEASE_TAG: 'v1.5.0-ios-preview.2'
+      BUILD_RUN: '40567417801'
+      BUILD_COMMIT: '4e1011ccdc1a65be418451d0791ed1b4df041f2f'
+      RELEASE_TAG: 'v1.5.0-ios-preview.3'
     steps:
       - name: Verify and download successful iOS build
         shell: bash
@@ -38,33 +38,31 @@ jobs:
         run: |
           set -euo pipefail
           cat > notes.md <<'NOTES'
-          iOS Preview 2 of Sonic 1 Forever 1.5.0, with improved file selection and import feedback.
-
-          ## Installation
-          1. Download either SonicForever-iOS.ipa or SonicForever-iOS.tipa below.
-          2. Install it with TrollStore Lite or another compatible installer.
-          3. Launch Sonic Forever, tap Import Data.rsdk, and select the archive from your own Sonic 1 (2013) copy.
-
-          Requires iOS 15 or later. The two packages contain the same app; choose the extension supported by your installer.
-
-          ## Included
-          - Updated file picker accepts .rsdk files even when Files does not recognize the extension.
-          - Background import keeps the screen responsive.
-          - Real byte progress, percentage, copied size and approximate remaining time.
-          - A separate waiting indicator for cloud file providers.
-          - Invalid or failed imports leave existing game data intact.
-          - Forever touch controls enabled on startup.
-          - Saves, settings and mods in Files → On My iPhone → Sonic Forever.
-          - Static SDL2, Ogg and Vorbis dependencies.
-
-          GitHub Actions successfully compiled, linked and packaged this build. The updated picker and progress UI still need verification on an iPhone. This is a preview release.
-
+          iOS Preview 3 fixes the startup failures in the earlier previews.
+          
+          ## Fixes
+          - Stage all 328 Forever scripts under Data/Scripts so the engine can load them.
+          - Adapt legacy events, function declarations, input names and fade operations to the current script compiler.
+          - Restore the priority, collision and platform aliases expected by Forever.
+          - Register the missing frame-rate callbacks that caused a crash while opening the main menu.
+          - Use the standalone mobile RSDK revision and refresh the previously installed bundled mod on first launch.
+          - Keep the progress bar and improved data importer from Preview 2.
+          
+          ## Update and install
+          Install the .ipa or .tipa as an update through your compatible installer. Existing Data.rsdk and save files remain in the app's Documents folder.
+          For a new installation, choose your own Sonic 1 (2013) Data.rsdk when prompted.
+          
+          Requires iOS 15 or later. The IPA and TIPA contain the same app.
+          
+          ## Validation
+          The iOS compilation and packaging passed. A headless runtime test with Sonic 1 data passed title screen → main menu → save selection → Green Hill Zone Act 1 with simulated mobile input and no script errors. Rendering and controls still need verification on an actual iPhone.
+          
           The original Sonic 1 Data.rsdk is not included. Original game: SEGA / Sonic Team. Forever: Team Forever and credited contributors. Engine: RSDKModding, Rubberduckycooly and RMGRich; original RSDK by Christian Whitehead.
-
-          Built from commit 7bde582c56931deb87ec8c50bef11fb5e5e11a91 in workflow run 40546766777.
+          
+          Built from commit 4e1011ccdc1a65be418451d0791ed1b4df041f2f in workflow run 40567417801.
           NOTES
           if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release create "$RELEASE_TAG" --target "$GITHUB_SHA" --draft --prerelease --title "Sonic Forever 1.5.0 — iOS Preview 2" --notes-file notes.md
+            gh release create "$RELEASE_TAG" --target "$GITHUB_SHA" --draft --prerelease --title "Sonic Forever 1.5.0 — iOS Preview 3" --notes-file notes.md
           fi
           gh release upload "$RELEASE_TAG" release-assets/SonicForever-iOS.ipa release-assets/SonicForever-iOS.tipa --clobber
           gh release edit "$RELEASE_TAG" --draft=false --prerelease --notes-file notes.md
