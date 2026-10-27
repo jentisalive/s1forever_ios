@@ -6,9 +6,9 @@ engine = root / '.build-deps/engine'
 def replace(path, old, new, count=None):
     p = engine / path
     s = p.read_text()
+    if new in s:
+        return
     if old not in s:
-        if new in s:
-            return
         raise RuntimeError(f'Upstream context changed: {path}: {old[:70]}')
     if count is not None and s.count(old) != count:
         raise RuntimeError(f'Unexpected match count in {path}')
@@ -25,6 +25,12 @@ d = 'RSDKv4/Drawing.cpp'
 replace(d, '#if RETRO_PLATFORM != RETRO_ANDROID', '#if RETRO_PLATFORM != RETRO_ANDROID && RETRO_PLATFORM != RETRO_iOS')
 # Keep Android-only audio code untouched, share only graphics dimensions.
 replace(d, '#if RETRO_PLATFORM == RETRO_ANDROID\n    Engine.', '#if RETRO_PLATFORM == RETRO_ANDROID || RETRO_PLATFORM == RETRO_iOS\n    Engine.')
+# UIKit owns a non-zero framebuffer; retain it across high-resolution setup.
+replace(d, 'void SetScreenDimensions(int width, int height)\n{', 'void SetScreenDimensions(int width, int height)\n{\n#if RETRO_PLATFORM == RETRO_iOS && RETRO_USING_OPENGL\n    GLint iosFramebuffer = 0;\n    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &iosFramebuffer);\n#endif', 1)
+replace(d, '        glBindFramebuffer(GL_FRAMEBUFFER, 0);', '#if RETRO_PLATFORM == RETRO_iOS\n        glBindFramebuffer(GL_FRAMEBUFFER, iosFramebuffer);\n#else\n        glBindFramebuffer(GL_FRAMEBUFFER, 0);\n#endif')
+# SDL's display mode uses logical points; the GLES viewport needs drawable pixels.
+replace(d, '        int w = mode.w;\n        int h = mode.h;', '        int w = mode.w;\n        int h = mode.h;\n#if RETRO_PLATFORM == RETRO_iOS\n        SDL_GL_GetDrawableSize(Engine.window, &w, &h);\n#endif', 1)
+replace(d, '        if (mode.h > mode.w) {', '        if (h > w) {', 1)
 replace('RSDKv4/main.cpp', '    SDL_SetHint(SDL_HINT_WINRT_HANDLE_BACK_BUTTON', '#if RETRO_PLATFORM == RETRO_iOS\n    if (!IOSPrepareGame()) return 1;\n    SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");\n    SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");\n#endif\n    SDL_SetHint(SDL_HINT_WINRT_HANDLE_BACK_BUTTON', 1)
 # chdir(Documents) makes existing relative resource/settings/mod paths writable.
 # Existing iOS save branches use this stable bridge function.
