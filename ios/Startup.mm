@@ -193,7 +193,7 @@ bool IOSPrepareGame() {
         NSString *resources = [NSBundle.mainBundle.resourcePath stringByAppendingPathComponent:@"ForeverResources"];
         NSString *mods = [docs stringByAppendingPathComponent:@"mods"];
         [fm createDirectoryAtPath:mods withIntermediateDirectories:YES attributes:nil error:&error];
-        NSString *version = @"1.5.0-ios-1";
+        NSString *version = @"1.5.0-ios-3";
         NSString *marker = [docs stringByAppendingPathComponent:@".bundled-version"];
         NSString *installed = [NSString stringWithContentsOfFile:marker encoding:NSUTF8StringEncoding error:nil];
         NSString *targetMod = [mods stringByAppendingPathComponent:@"Sonic 1 Forever"];
